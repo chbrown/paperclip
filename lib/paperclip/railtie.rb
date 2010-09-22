@@ -5,7 +5,7 @@ module Paperclip
     require 'rails'
     class Railtie < Rails::Railtie
       initializer 'paperclip.insert_into_active_record' do
-        ActiveSupport.on_load :active_record do
+        ActiveSupport.on_load :after_initialize do
           Paperclip::Railtie.insert
         end
       end
@@ -17,7 +17,7 @@ module Paperclip
 
   class Railtie
     def self.insert
-      ActiveRecord::Base.send(:include, Paperclip)
+      Sequel::Model.send(:include, Paperclip)
       File.send(:include, Paperclip::Upfile)
     end
   end

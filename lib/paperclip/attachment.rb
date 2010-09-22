@@ -280,11 +280,11 @@ module Paperclip
 
     def post_process #:nodoc:
       return if @queued_for_write[:original].nil?
-      instance.run_paperclip_callbacks(:post_process) do
-        instance.run_paperclip_callbacks(:"#{name}_post_process") do
-          post_process_styles
-        end
-      end
+      # instance.run_paperclip_callbacks(:post_process) do
+        # instance.run_paperclip_callbacks(:"#{name}_post_process") do
+      post_process_styles
+        # end
+      # end
     end
 
     def post_process_styles #:nodoc:

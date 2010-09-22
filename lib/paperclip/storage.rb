@@ -35,6 +35,7 @@ module Paperclip
       end
 
       def flush_writes #:nodoc:
+        Paperclip.log "Filesystem.flush(ing)_writes --=--=--"
         @queued_for_write.each do |style_name, file|
           file.close
           FileUtils.mkdir_p(File.dirname(path(style_name)))

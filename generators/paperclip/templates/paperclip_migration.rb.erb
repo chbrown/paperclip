@@ -1,4 +1,4 @@
-class <%= migration_name %> < ActiveRecord::Migration
+<!-- class <%= migration_name %> < ActiveRecord::Migration
   def self.up
 <% attachments.each do |attachment| -%>
     add_column :<%= class_name.underscore.camelize.tableize %>, :<%= attachment %>_file_name, :string
@@ -16,4 +16,4 @@ class <%= migration_name %> < ActiveRecord::Migration
     remove_column :<%= class_name.underscore.camelize.tableize %>, :<%= attachment %>_updated_at
 <% end -%>
   end
-end
+end -->

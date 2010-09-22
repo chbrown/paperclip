@@ -40,6 +40,9 @@ require 'paperclip/attachment'
 require 'paperclip/callback_compatability'
 require 'paperclip/command_line'
 require 'paperclip/railtie'
+require 'sequel'
+require 'logger'
+
 if defined?(Rails.root) && Rails.root
   Dir.glob(File.join(File.expand_path(Rails.root), "lib", "paperclip_processors", "*.rb")).each do |processor|
     require processor
@@ -105,11 +108,11 @@ module Paperclip
 
     def included base #:nodoc:
       base.extend ClassMethods
-      if base.respond_to?("set_callback")
-        base.send :include, Paperclip::CallbackCompatability::Rails3
-      else
-        base.send :include, Paperclip::CallbackCompatability::Rails21
-      end
+      # if base.respond_to?("set_callback")
+      # base.send :include, Paperclip::CallbackCompatability::Rails3
+      # else
+      #   base.send :include, Paperclip::CallbackCompatability::Rails21
+      # end
     end
 
     def processor name #:nodoc:
@@ -128,7 +131,8 @@ module Paperclip
     end
 
     def logger #:nodoc:
-      ActiveRecord::Base.logger
+      Logger.new($stdout)
+      # ActiveRecord::Base.logger
     end
 
     def logging? #:nodoc:
@@ -226,10 +230,16 @@ module Paperclip
       write_inheritable_attribute(:attachment_definitions, {}) if attachment_definitions.nil?
       attachment_definitions[name] = {:validations => []}.merge(options)
 
-      after_save :save_attached_files
-      before_destroy :destroy_attached_files
+      def after_save 
+        super
+        save_attached_files
+      end
+      def before_destroy
+        destroy_attached_files
+        super
+      end
 
-      define_paperclip_callbacks :post_process, :"#{name}_post_process"
+      # define_paperclip_callbacks :post_process, :"#{name}_post_process"
 
       define_method name do |*args|
         a = attachment_for(name)
@@ -244,10 +254,11 @@ module Paperclip
         attachment_for(name).file?
       end
 
-      validates_each(name) do |record, attr, value|
-        attachment = record.attachment_for(name)
-        attachment.send(:flush_errors)
-      end
+      # def validate
+      #   (name) do |record, attr, value|
+      #   attachment = record.attachment_for(name)
+      #   attachment.send(:flush_errors)
+      # end
     end
 
     # Places ActiveRecord-style validations on the size of the file assigned. The
@@ -311,20 +322,20 @@ module Paperclip
     # NOTE: If you do not specify an [attachment]_content_type field on your
     # model, content_type validation will work _ONLY upon assignment_ and
     # re-validation after the instance has been reloaded will always succeed.
-    def validates_attachment_content_type name, options = {}
-      validation_options = options.dup
-      allowed_types = [validation_options[:content_type]].flatten
-      validates_each(:"#{name}_content_type", validation_options) do |record, attr, value|
-        if !allowed_types.any?{|t| t === value } && !(value.nil? || value.blank?)
-          if record.errors.method(:add).arity == -2
-            message = options[:message] || "is not one of #{allowed_types.join(", ")}"
-            record.errors.add(:"#{name}_content_type", message)
-          else
-            record.errors.add(:"#{name}_content_type", :inclusion, :default => options[:message], :value => value)
-          end
-        end
-      end
-    end
+    # def validates_attachment_content_type name, options = {}
+    #   validation_options = options.dup
+    #   allowed_types = [validation_options[:content_type]].flatten
+    #   validates_each(:"#{name}_content_type", validation_options) do |record, attr, value|
+    #     if !allowed_types.any?{|t| t === value } && !(value.nil? || value.blank?)
+    #       if record.errors.method(:add).arity == -2
+    #         message = options[:message] || "is not one of #{allowed_types.join(", ")}"
+    #         record.errors.add(:"#{name}_content_type", message)
+    #       else
+    #         record.errors.add(:"#{name}_content_type", :inclusion, :default => options[:message], :value => value)
+    #       end
+    #     end
+    #   end
+    # end
 
     # Returns the attachment definitions defined by each call to
     # has_attached_file.
