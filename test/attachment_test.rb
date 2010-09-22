@@ -338,9 +338,29 @@ class AttachmentTest < Test::Unit::TestCase
     end
   end
 
+  should "include the filesystem module when loading the filesystem storage" do
+    rebuild_model :storage => :filesystem
+    @dummy = Dummy.new
+    assert @dummy.avatar.is_a?(Paperclip::Storage::Filesystem)
+  end
+
+  should "include the filesystem module even if capitalization is wrong" do
+    rebuild_model :storage => :FileSystem
+    @dummy = Dummy.new
+    assert @dummy.avatar.is_a?(Paperclip::Storage::Filesystem)
+  end
+
+  should "raise an error if you try to include a storage module that doesn't exist" do
+    rebuild_model :storage => :not_here
+    @dummy = Dummy.new
+    assert_raises(Paperclip::StorageMethodNotFound) do
+      @dummy.avatar
+    end
+  end
+
   context "An attachment with styles but no processors defined" do
     setup do
-      rebuild_model :processors => [], :styles => {:something => 1}
+      rebuild_model :processors => [], :styles => {:something => '1'}
       @dummy = Dummy.new
       @file = StringIO.new("...")
     end
@@ -446,6 +466,8 @@ class AttachmentTest < Test::Unit::TestCase
       @not_file = mock
       @tempfile = mock
       @not_file.stubs(:nil?).returns(false)
+      @not_file.stubs(:fingerprint).returns('bd94545193321376b70136f8b223abf8')
+      @tempfile.stubs(:fingerprint).returns('bd94545193321376b70136f8b223abf8')
       @not_file.expects(:size).returns(10)
       @tempfile.expects(:size).returns(10)
       @not_file.expects(:to_tempfile).returns(@tempfile)
@@ -656,7 +678,7 @@ class AttachmentTest < Test::Unit::TestCase
       end
 
       should "not be able to find the module" do
-        assert_raise(NameError){ Dummy.new.avatar }
+        assert_raise(Paperclip::StorageMethodNotFound){ Dummy.new.avatar }
       end
     end
   end
@@ -752,6 +774,30 @@ class AttachmentTest < Test::Unit::TestCase
         @dummy.save
         @dummy = Dummy.find(@dummy.id)
         assert_equal @file.size, @dummy.avatar.size
+      end
+    end
+
+    context "and avatar_fingerprint column" do
+      setup do
+        ActiveRecord::Base.connection.add_column :dummies, :avatar_fingerprint, :string
+        rebuild_class
+        @dummy = Dummy.new
+      end
+
+      should "not error when assigned an attachment" do
+        assert_nothing_raised { @dummy.avatar = @file }
+      end
+
+      should "return the right value when sent #avatar_fingerprint" do
+        @dummy.avatar = @file
+        assert_equal 'aec488126c3b33c08a10c3fa303acf27', @dummy.avatar_fingerprint
+      end
+
+      should "return the right value when saved, reloaded, and sent #avatar_fingerprint" do
+        @dummy.avatar = @file
+        @dummy.save
+        @dummy = Dummy.find(@dummy.id)
+        assert_equal 'aec488126c3b33c08a10c3fa303acf27', @dummy.avatar_fingerprint
       end
     end
   end

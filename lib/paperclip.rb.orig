@@ -34,7 +34,6 @@ require 'paperclip/iostream'
 require 'paperclip/geometry'
 require 'paperclip/processor'
 require 'paperclip/thumbnail'
-require 'paperclip/storage'
 require 'paperclip/interpolations'
 require 'paperclip/style'
 require 'paperclip/attachment'
@@ -107,6 +106,7 @@ module Paperclip
       CommandLine.new(cmd, *params).run
     end
 
+<<<<<<< HEAD
     def included base #:nodoc:
       base.extend ClassMethods
       # if base.respond_to?("set_callback")
@@ -116,6 +116,8 @@ module Paperclip
       # end
     end
 
+=======
+>>>>>>> 9e6afe4ff5b6b07bb1d50a4cb4bdd85feb1c9bbf
     def processor name #:nodoc:
       name = name.to_s.camelize
       processor = Paperclip.const_get(name)

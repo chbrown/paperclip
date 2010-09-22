@@ -57,14 +57,14 @@ require 'shoulda_macros/paperclip'
 
 FIXTURES_DIR = File.join(File.dirname(__FILE__), "fixtures")
 config = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
-ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
+ActiveRecord::Base.logger = ActiveSupport::BufferedLogger.new(File.dirname(__FILE__) + "/debug.log")
 ActiveRecord::Base.establish_connection(config['test'])
 
 def reset_class class_name
-  ActiveRecord::Base.send(:include, Paperclip)
+  ActiveRecord::Base.send(:include, Paperclip::Glue)
   Object.send(:remove_const, class_name) rescue nil
   klass = Object.const_set(class_name, Class.new(ActiveRecord::Base))
-  klass.class_eval{ include Paperclip }
+  klass.class_eval{ include Paperclip::Glue }
   klass
 end
 
@@ -84,16 +84,17 @@ def rebuild_model options = {}
     table.column :avatar_content_type, :string
     table.column :avatar_file_size, :integer
     table.column :avatar_updated_at, :datetime
+    table.column :avatar_fingerprint, :string
   end
   rebuild_class options
 end
 
 def rebuild_class options = {}
-  ActiveRecord::Base.send(:include, Paperclip)
+  ActiveRecord::Base.send(:include, Paperclip::Glue)
   Object.send(:remove_const, "Dummy") rescue nil
   Object.const_set("Dummy", Class.new(ActiveRecord::Base))
   Dummy.class_eval do
-    include Paperclip
+    include Paperclip::Glue
     has_attached_file :avatar, options
   end
 end
@@ -103,6 +104,7 @@ class FakeModel
                 :avatar_file_size,
                 :avatar_last_updated,
                 :avatar_content_type,
+                :avatar_fingerprint,
                 :id
 
   def errors

@@ -1,0 +1,28 @@
+require 'paperclip'
+
+module Paperclip
+  if defined? Rails::Railtie
+    require 'rails'
+    class Railtie < Rails::Railtie
+      initializer 'paperclip.insert_into_active_record' do
+        ActiveSupport.on_load :after_initialize do
+          Paperclip::Railtie.insert
+        end
+      end
+      rake_tasks do
+        load "tasks/paperclip.rake"
+      end
+    end
+  end
+
+  class Railtie
+    def self.insert
+<<<<<<< HEAD
+      Sequel::Model.send(:include, Paperclip)
+=======
+      ActiveRecord::Base.send(:include, Paperclip::Glue)
+>>>>>>> 9e6afe4ff5b6b07bb1d50a4cb4bdd85feb1c9bbf
+      File.send(:include, Paperclip::Upfile)
+    end
+  end
+end
