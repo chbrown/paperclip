@@ -38,6 +38,7 @@ require 'paperclip/storage'
 require 'paperclip/interpolations'
 require 'paperclip/style'
 require 'paperclip/attachment'
+require 'paperclip/storage'
 require 'paperclip/callback_compatability'
 require 'paperclip/command_line'
 require 'paperclip/railtie'
@@ -123,6 +124,12 @@ module Paperclip
         raise PaperclipError.new("Processor #{name} was not found")
       end
       processor
+    end
+
+    def each_instance_with_attachment(klass, name)
+      Object.const_get(klass).all.each do |instance|
+        yield(instance) if instance.send(:"#{name}?")
+      end
     end
 
     # Log a paperclip-specific line. Uses ActiveRecord::Base.logger
